@@ -165,7 +165,7 @@ router.post('/removewatched', (req, res) => {
 })
 
 
-router.get('/watchlist', (req,res) => {
+router.post('/watchlist', (req,res) => {
     const filter = { user: 'root' };
     Credential.findOne(filter)
     .then((result) => {
@@ -173,10 +173,13 @@ router.get('/watchlist', (req,res) => {
             fetch(`https://api.themoviedb.org/3/account?api_key=${apiKey}&session_id=${result.session_id}`)
             .then(data => data.json())
             .then( data => {
-                fetch(`https://api.themoviedb.org/3/account/${data.username}/watchlist/movies?api_key=${apiKey}&session_id=${result.session_id}`)
+                fetch(`https://api.themoviedb.org/3/account/${data.username}/watchlist/movies?api_key=${apiKey}&session_id=${result.session_id}&page=${req.body.page}`)
                 .then(data => data.json())
                 .then(data => {
-                    res.send(data.results)
+                    res.send({
+                        results : data.results, 
+                        totalPage : data.total_pages
+                    })
                 })
             })
         }catch(e){
@@ -201,5 +204,19 @@ router.get('/account', (req, res) => {
     })
 })
 
+
+router.get('/deletesession',(req,res)=>{
+    try{
+        const filter = { user: 'root' };
+        const update = { session_id : "deleted" };
+        Credential.findOneAndUpdate(filter, update)
+        .then(() => {
+            res.send({message:"session deleted"})
+        })
+    }catch(e){
+        console.log(e.message)
+    }
+    
+})
 
 module.exports = router;
